@@ -14,6 +14,7 @@ const COLORS = [
   '#9fa8da', // J - azul índigo pastel
   '#ffb74d', // L - orange
   '#b0bec5', // Tuerca - gris metálico
+  '#ff5722', // Bomba - naranja intenso
 ];
 
 const PIECES = [
@@ -26,10 +27,15 @@ const PIECES = [
   [[6,0,0],[6,6,6],[0,0,0]],                  // J
   [[0,0,7],[7,7,7],[0,0,0]],                  // L
   [[8,8,8],[8,0,8],[8,8,8]],                  // Tuerca (hueco en el centro)
+  [[9]],                                       // Bomba (1x1)
 ];
 
 const NUT = 8;
 const NUT_CHANCE = 0.07; // probabilidad de que salga la tuerca
+const BOMB = 9;
+const BOMB_CHANCE = 0.05; // probabilidad de que salga la bomba
+const BOMB_POINTS = 10;   // puntos por bloque destruido
+const EXPLOSION_MS = 400; // duración del destello
 
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
@@ -57,13 +63,18 @@ function applyTheme(isDark) {
 }
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let explosions = [];
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
 }
 
 function randomPiece() {
-  const type = Math.random() < NUT_CHANCE ? NUT : Math.floor(Math.random() * 7) + 1;
+  const r = Math.random();
+  let type;
+  if (r < NUT_CHANCE) type = NUT;
+  else if (r < NUT_CHANCE + BOMB_CHANCE) type = BOMB;
+  else type = Math.floor(Math.random() * 7) + 1;
   const shape = PIECES[type].map(row => [...row]);
   return { type, shape, x: Math.floor(COLS / 2) - Math.floor(shape[0].length / 2), y: 0 };
 }
@@ -151,8 +162,25 @@ function softDrop() {
   }
 }
 
+function explode(cx, cy) {
+  let destroyed = 0;
+  for (let r = cy - 1; r <= cy + 1; r++) {
+    for (let c = cx - 1; c <= cx + 1; c++) {
+      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
+      if (board[r][c]) {
+        board[r][c] = 0;
+        destroyed++;
+      }
+    }
+  }
+  score += destroyed * BOMB_POINTS;
+  explosions.push({ cx, cy, start: performance.now() });
+  updateHUD();
+}
+
 function lockPiece() {
-  merge();
+  if (current.type === BOMB) explode(current.x, current.y);
+  else merge();
   clearLines();
   spawn();
 }
@@ -221,6 +249,24 @@ function draw() {
   for (let r = 0; r < current.shape.length; r++)
     for (let c = 0; c < current.shape[r].length; c++)
       drawBlock(ctx, current.x + c, current.y + r, current.shape[r][c], BLOCK);
+
+  drawExplosions();
+}
+
+function drawExplosions() {
+  const now = performance.now();
+  explosions = explosions.filter(e => now - e.start < EXPLOSION_MS);
+  for (const e of explosions) {
+    const t = (now - e.start) / EXPLOSION_MS; // 0 → 1
+    const x0 = Math.max(0, e.cx - 1), x1 = Math.min(COLS - 1, e.cx + 1);
+    const y0 = Math.max(0, e.cy - 1), y1 = Math.min(ROWS - 1, e.cy + 1);
+    const x = x0 * BLOCK, y = y0 * BLOCK;
+    const w = (x1 - x0 + 1) * BLOCK, h = (y1 - y0 + 1) * BLOCK;
+    ctx.globalAlpha = 0.9 * (1 - t);
+    ctx.fillStyle = t < 0.3 ? '#ffffff' : COLORS[BOMB];
+    ctx.fillRect(x, y, w, h);
+    ctx.globalAlpha = 1;
+  }
 }
 
 function drawNext() {
@@ -274,6 +320,7 @@ function loop(ts) {
 
 function init() {
   board = createBoard();
+  explosions = [];
   score = 0;
   lines = 0;
   level = 1;
