@@ -119,6 +119,21 @@ body {
   border-radius: 4px;
 }
 
+/* Skin Neón: fondo de canvas negro en ambos temas */
+:root[data-skin="neon"] #board,
+:root[data-skin="neon"] #next-canvas {
+  background: #000;
+}
+
+#skin-select {
+  background: var(--kbd-bg);
+  color: var(--text);
+  border: 1px solid var(--kbd-border);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
 /* ---- Controles ---- */
 .controls ul {
   list-style: none;

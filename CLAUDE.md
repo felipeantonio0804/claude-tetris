@@ -19,7 +19,7 @@ Todo el juego está en `game.js` (script único, `'use strict'`, estado en varia
 - **Bucle**: `loop` (`requestAnimationFrame`) acumula `dropAccum` y baja la pieza cuando supera `dropInterval`; `dropInterval` lo recalcula `clearLines()` según el nivel (`max(100, 1000 - (level-1)*90)`). Pausa y fin de partida cancelan el frame con `cancelAnimationFrame(animId)`; `init()` también cancela antes de reiniciar.
 - **Colisión/rotación**: `collide(shape, ox, oy)` es la única comprobación de límites/ocupación; `tryRotate` rota en sentido horario y prueba kicks horizontales `[0, -1, 1, -2, 2]`.
 - **Puntuación**: líneas según `LINE_SCORES` × nivel; soft drop +1 por celda y hard drop +2 por celda; el nivel sube cada 10 líneas.
-- **Render**: `draw()` repinta todo cada frame (cuadrícula, tablero, pieza fantasma con alpha 0.2, pieza actual); `drawNext()` solo se llama desde `spawn()`. Los elementos del HUD se actualizan con `updateHUD()`.
+- **Render**: `draw()` repinta todo cada frame (cuadrícula, tablero, pieza fantasma con alpha 0.2, pieza actual); `drawNext()` solo se llama desde `spawn()` (y desde `applySkin()`). Los skins viven en `skins.js` (`SKINS` = retro/neon/pastel/pixel, cada uno con `colors[]`, `grid` y `drawBlock`); `game.js` delega en `SKINS[skin]` (persistido en `localStorage` `tetris.skin`, selector `#skin-select`; Neón fuerza fondo negro vía CSS `data-skin`). `COLORS` ya no se usa para pintar. Los elementos del HUD se actualizan con `updateHUD()`.
 - **Entrada**: un único listener `keydown` (←/→/↓, ↑ o X para rotar, Espacio hard drop, P pausa).
 
 ## Notas

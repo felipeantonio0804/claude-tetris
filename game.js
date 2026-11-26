@@ -62,6 +62,18 @@ function applyTheme(isDark) {
   themeLabel.textContent = isDark ? 'Modo oscuro' : 'Modo claro';
 }
 
+// Skin visual (eje independiente del tema claro/oscuro); definidos en skins.js
+const skinSelect = document.getElementById('skin-select');
+let skin = DEFAULT_SKIN;
+
+function applySkin(name) {
+  skin = SKINS[name] ? name : DEFAULT_SKIN;
+  document.documentElement.dataset.skin = skin; // el CSS fuerza fondo negro en Neón
+  skinSelect.value = skin;
+  // current/next existen solo tras init(); proteger llamadas tempranas
+  if (current && next) { draw(); drawNext(); }
+}
+
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let explosions = [];
 
@@ -202,18 +214,11 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
-  context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
-  context.globalAlpha = 1;
+  SKINS[skin].drawBlock(context, x, y, colorIndex, size, alpha ?? 1);
 }
 
 function drawGrid() {
-  ctx.strokeStyle = GRID_COLORS[theme];
+  ctx.strokeStyle = SKINS[skin].grid || GRID_COLORS[theme];
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -263,7 +268,7 @@ function drawExplosions() {
     const x = x0 * BLOCK, y = y0 * BLOCK;
     const w = (x1 - x0 + 1) * BLOCK, h = (y1 - y0 + 1) * BLOCK;
     ctx.globalAlpha = 0.9 * (1 - t);
-    ctx.fillStyle = t < 0.3 ? '#ffffff' : COLORS[BOMB];
+    ctx.fillStyle = t < 0.3 ? '#ffffff' : SKINS[skin].colors[BOMB];
     ctx.fillRect(x, y, w, h);
     ctx.globalAlpha = 1;
   }
@@ -369,6 +374,13 @@ themeToggle.addEventListener('change', () => {
   themeToggle.blur(); // evita que Espacio (hard drop) vuelva a activar el checkbox
 });
 
+skinSelect.addEventListener('change', () => {
+  applySkin(skinSelect.value);
+  try { localStorage.setItem('tetris.skin', skin); } catch (e) { /* sin almacenamiento */ }
+  skinSelect.blur(); // evita que Espacio (hard drop) reabra/active el select
+});
+
 applyTheme(true);
+try { applySkin(localStorage.getItem('tetris.skin')); } catch (e) { applySkin(DEFAULT_SKIN); }
 
 init();
