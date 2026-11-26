@@ -64,10 +64,11 @@ function applyTheme(isDark) {
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let explosions = [];
-let startLevel = 1; // nivel inicial de la próxima partida (menú de pausa)
+let startLevel = 1;        // nivel inicial de la partida en curso
+let pendingStartLevel = 1; // elegido en el menú; se aplica en el próximo init()
 
 function setStartLevel(n) {
-  startLevel = n;
+  pendingStartLevel = n;
 }
 
 function createBoard() {
@@ -327,6 +328,7 @@ function init() {
   explosions = [];
   score = 0;
   lines = 0;
+  startLevel = pendingStartLevel;
   level = startLevel;
   paused = false;
   gameOver = false;
@@ -343,7 +345,7 @@ function init() {
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP' || e.code === 'Escape') { if (!e.repeat) togglePause(); return; }
+  if ((e.code === 'KeyP' || e.code === 'Escape') && e.target.tagName !== 'SELECT') { if (!e.repeat) togglePause(); return; }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
