@@ -20,7 +20,8 @@ Todo el juego está en `game.js` (script único, `'use strict'`, estado en varia
 - **Colisión/rotación**: `collide(shape, ox, oy)` es la única comprobación de límites/ocupación; `tryRotate` rota en sentido horario y prueba kicks horizontales `[0, -1, 1, -2, 2]`.
 - **Puntuación**: líneas según `LINE_SCORES` × nivel; soft drop +1 por celda y hard drop +2 por celda; el nivel sube cada 10 líneas.
 - **Render**: `draw()` repinta todo cada frame (cuadrícula, tablero, pieza fantasma con alpha 0.2, pieza actual); `drawNext()` solo se llama desde `spawn()`. Los elementos del HUD se actualizan con `updateHUD()`.
-- **Entrada**: un único listener `keydown` (←/→/↓, ↑ o X para rotar, Espacio hard drop, P pausa).
+- **Entrada**: un único listener `keydown` (←/→/↓, ↑ o X para rotar, Espacio hard drop, P pausa). El `<input>` de nombre (`name-input`) frena la propagación de teclas.
+- **Records**: `records.js` (se carga antes de `game.js`, expone `Records`) guarda en `localStorage['tetris.records']` el top 5 + `bestCombo` + `maxLines`. `game.js` lleva `combo`/`bestComboRun` (en `lockPiece()`) y llama a `Records.onGameOver()` en `endGame()`; la tabla se pinta con `Records.render()` en `#records-side` (panel lateral) y `#overlay-records`.
 
 ## Notas
 

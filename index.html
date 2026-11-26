@@ -50,17 +50,29 @@
           </label>
         </div>
       </aside>
+
+      <aside class="panel records-panel">
+        <span class="label">RECORDS</span>
+        <div id="records-side"></div>
+        <button id="reset-records-btn" class="small-btn">Resetear records</button>
+      </aside>
     </div>
 
     <div id="overlay" class="overlay hidden">
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+        <div id="overlay-records"></div>
+        <div id="name-entry" class="name-entry hidden">
+          <input id="name-input" type="text" maxlength="10" placeholder="Tu nombre" autocomplete="off" />
+          <button id="save-name-btn" class="small-btn">Guardar</button>
+        </div>
         <button id="restart-btn">Reiniciar</button>
       </div>
     </div>
   </div>
 
+  <script src="records.js"></script>
   <script src="game.js"></script>
 </body>
 </html>
