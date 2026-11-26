@@ -50,7 +50,13 @@ const overlay = document.getElementById('overlay');
 const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
-const themeToggle = document.getElementById('theme-toggle');
+const overlayRecords = document.getElementById('overlay-records');
+const recordsSide = document.getElementById('records-side');
+const nameEntry = document.getElementById('name-entry');
+const nameInput = document.getElementById('name-input');
+const saveNameBtn = document.getElementById('save-name-btn');
+const resetRecordsBtn = document.getElementById('reset-records-btn');
+const themeToggle =document.getElementById('theme-toggle');
 const themeLabel = document.getElementById('theme-label');
 
 const GRID_COLORS = { dark: '#22222e', light: '#e0e3ee' };
@@ -64,6 +70,8 @@ function applyTheme(isDark) {
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let explosions = [];
+let combo = 0, bestComboRun = 0;
+let recordRank = -1;
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -137,6 +145,7 @@ function clearLines() {
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     updateHUD();
   }
+  return cleared;
 }
 
 function ghostY() {
@@ -181,7 +190,9 @@ function explode(cx, cy) {
 function lockPiece() {
   if (current.type === BOMB) explode(current.x, current.y);
   else merge();
-  clearLines();
+  // combo: bloques consecutivos que limpian línea; se reinicia si no limpia
+  combo = clearLines() ? combo + 1 : 0;
+  bestComboRun = Math.max(bestComboRun, combo);
   spawn();
 }
 
@@ -285,7 +296,21 @@ function endGame() {
   cancelAnimationFrame(animId);
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
+  recordRank = Records.onGameOver(score, lines, bestComboRun, level);
+  Records.render(overlayRecords, recordRank);
+  Records.render(recordsSide, recordRank);
+  nameEntry.classList.toggle('hidden', recordRank < 0);
+  nameInput.value = '';
   overlay.classList.remove('hidden');
+  if (recordRank >= 0) nameInput.focus();
+}
+
+function saveName() {
+  if (recordRank < 0) return;
+  Records.setName(recordRank, nameInput.value);
+  nameEntry.classList.add('hidden');
+  Records.render(overlayRecords, recordRank);
+  Records.render(recordsSide, recordRank);
 }
 
 function togglePause() {
@@ -298,6 +323,8 @@ function togglePause() {
     cancelAnimationFrame(animId);
     overlayTitle.textContent = 'PAUSA';
     overlayScore.textContent = '';
+    overlayRecords.textContent = '';
+    nameEntry.classList.add('hidden');
     overlay.classList.remove('hidden');
   }
 }
@@ -321,6 +348,10 @@ function loop(ts) {
 function init() {
   board = createBoard();
   explosions = [];
+  combo = 0;
+  bestComboRun = 0;
+  recordRank = -1;
+  Records.render(recordsSide, -1);
   score = 0;
   lines = 0;
   level = 1;
@@ -363,6 +394,24 @@ document.addEventListener('keydown', e => {
 });
 
 restartBtn.addEventListener('click', init);
+
+// Records: el input no debe disparar los controles del juego
+nameInput.addEventListener('keydown', e => {
+  e.stopPropagation();
+  if (e.key === 'Enter') saveName();
+});
+saveNameBtn.addEventListener('click', saveName);
+resetRecordsBtn.addEventListener('click', () => {
+  if (!confirm('¿Borrar todos los records?')) return;
+  Records.reset();
+  Records.render(recordsSide, -1);
+  if (gameOver) {
+    Records.render(overlayRecords, -1);
+    nameEntry.classList.add('hidden');
+    recordRank = -1;
+  }
+  resetRecordsBtn.blur(); // evita que Espacio vuelva a activar el botón
+});
 
 themeToggle.addEventListener('change', () => {
   applyTheme(themeToggle.checked);
