@@ -20,7 +20,7 @@ Todo el juego está en `game.js` (script único, `'use strict'`, estado en varia
 - **Colisión/rotación**: `collide(shape, ox, oy)` es la única comprobación de límites/ocupación; `tryRotate` rota en sentido horario y prueba kicks horizontales `[0, -1, 1, -2, 2]`.
 - **Puntuación**: líneas según `LINE_SCORES` × nivel; soft drop +1 por celda y hard drop +2 por celda; el nivel sube cada 10 líneas.
 - **Render**: `draw()` repinta todo cada frame (cuadrícula, tablero, pieza fantasma con alpha 0.2, pieza actual); `drawNext()` solo se llama desde `spawn()`. Los elementos del HUD se actualizan con `updateHUD()`.
-- **Entrada**: un único listener `keydown` (←/→/↓, ↑ o X para rotar, Espacio hard drop, P pausa).
+- **Entrada**: un único listener `keydown` (←/→/↓, ↑ o X para rotar, Espacio hard drop, P o Escape abren/cierran el menú de pausa `#pause-menu`, gestionado por `pause.js`; `startLevel` fija el nivel de la próxima partida).
 
 ## Notas
 
